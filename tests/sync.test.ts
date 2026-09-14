@@ -21,6 +21,11 @@ import { ChangeTracker } from "@/sync/changeTracker";
 import { GasClient, type FetchLike } from "@/sync/gasClient";
 import { SyncService } from "@/sync/syncService";
 import { setGasApiUrl } from "@/sync/syncConfig";
+import {
+  applyBackup,
+  enqueueBackupForSync,
+  type ShiftFlowBackup,
+} from "@/import-export/json/jsonBackup";
 import type {
   PullResponseData,
   PushRequest,
@@ -468,5 +473,56 @@ describe("single-flight", () => {
     // Both resolve; no crash, no double-apply (cloud version stays 1).
     expect(a.offline).toBe(false);
     expect(b.offline).toBe(false);
+  });
+});
+
+describe("JSON import -> cloud sync", () => {
+  it("imported backup records are enqueued and pushed to the cloud", async () => {
+    // A backup with one WorkDay + one TaskDefinition (as if from another device).
+    const backup: ShiftFlowBackup = {
+      format: "shiftflow-backup",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: {
+        workDays: [
+          {
+            id: "imp-wd-1",
+            date: "2027-09-15",
+            shiftID: "s",
+            shiftCode: "C3",
+            resolvedStartDateTime: "2027-09-15T08:00:00.000Z",
+            resolvedEndDateTime: "2027-09-15T17:30:00.000Z",
+            resolvedBreakStartDateTime: "2027-09-15T12:00:00.000Z",
+            resolvedBreakEndDateTime: "2027-09-15T13:00:00.000Z",
+            note: "imported",
+            createdAt: "x",
+            modifiedAt: "x",
+          },
+        ],
+        shiftDefinitions: [],
+        scheduleRules: [],
+        taskDefinitions: [
+          { id: "imp-task-1", code: "IMP", name: "Imported", isActive: true, createdAt: "x", modifiedAt: "x" },
+        ],
+        workDayTasks: [],
+        workDayEvents: [],
+        reminders: [],
+      },
+    };
+
+    // Apply locally (writes straight to IndexedDB, bypassing services).
+    await applyBackup(rig.db, backup, "merge");
+    // Then enqueue for sync (what the Data screen now does after import).
+    const n = await enqueueBackupForSync(backup, rig.tracker);
+    expect(n).toBe(2); // 1 WorkDay + 1 TaskDefinition
+
+    const pending = await rig.queue.pending();
+    expect(pending.some((c) => c.entityId === "imp-wd-1")).toBe(true);
+    expect(pending.some((c) => c.entityId === "imp-task-1")).toBe(true);
+
+    // Push -> cloud has both records.
+    await rig.sync.push();
+    expect(rig.cloud.entities.get("WorkDay")?.get("imp-wd-1")?.version).toBe(1);
+    expect(rig.cloud.entities.get("TaskDefinition")?.get("imp-task-1")?.version).toBe(1);
   });
 });

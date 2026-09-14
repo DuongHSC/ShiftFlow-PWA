@@ -19,6 +19,8 @@ import type {
   WorkDayEvent,
   WorkDayTask,
 } from "@/domain/models/models";
+import type { EntityChangeSink } from "@/sync/changeSink";
+import type { SyncEntityType } from "@/sync/syncTypes";
 
 export const BACKUP_FORMAT = "shiftflow-backup";
 export const BACKUP_VERSION = 1;
@@ -254,4 +256,42 @@ export async function applyBackup(
     reminders: d.reminders.length,
     mode,
   };
+}
+
+/**
+ * Enqueues every record from an imported backup into the sync queue so the next
+ * "Lưu & Đồng bộ" pushes it to the cloud (and thus to other devices).
+ *
+ * Call this AFTER applyBackup() — applyBackup writes directly to IndexedDB
+ * (bypassing the services that normally enqueue), so a JSON import would
+ * otherwise stay local-only. Uses UPDATE (an idempotent upsert on the server).
+ * Must run outside applyBackup's transaction (it writes to syncQueue/syncMeta).
+ */
+export async function enqueueBackupForSync(
+  backup: ShiftFlowBackup,
+  sink: EntityChangeSink,
+): Promise<number> {
+  const d = backup.data;
+  const groups: [SyncEntityType, { id: string }[]][] = [
+    ["ShiftDefinition", d.shiftDefinitions],
+    ["ScheduleRule", d.scheduleRules],
+    ["TaskDefinition", d.taskDefinitions],
+    ["WorkDay", d.workDays],
+    ["WorkDayTask", d.workDayTasks],
+    ["WorkDayEvent", d.workDayEvents],
+    ["ReminderConfiguration", d.reminders],
+  ];
+  let count = 0;
+  for (const [entityType, records] of groups) {
+    for (const rec of records) {
+      await sink.record({
+        entityType,
+        entityId: rec.id,
+        operation: "UPDATE",
+        payload: { ...(rec as Record<string, unknown>) },
+      });
+      count += 1;
+    }
+  }
+  return count;
 }

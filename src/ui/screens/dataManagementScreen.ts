@@ -15,6 +15,7 @@ import { toISODateLocal } from "@/domain/resolver/datetime";
 import {
   applyBackup,
   clearAllData as clearDatabase,
+  enqueueBackupForSync,
   exportBackupJson,
   parseBackup,
   type BackupImportMode,
@@ -318,7 +319,12 @@ function openJsonPreview(backup: ShiftFlowBackup, ctx: DataScreenContext): void 
         onClick: async () => {
           try {
             const s = await applyBackup(db, backup, mode);
-            toast(`Đã nhập ${s.workDays} WorkDays (${mode})`);
+            // Queue the imported records for cloud sync (JSON import writes
+            // directly to IndexedDB, so it must be enqueued explicitly), then
+            // push in the background so other devices can pull it.
+            await enqueueBackupForSync(backup, app.changeTracker);
+            void app.syncService.sync().catch(() => {});
+            toast(`Đã nhập ${s.workDays} WorkDays (${mode}) · đang đồng bộ`);
             close();
             ctx.refresh();
           } catch (err) {
@@ -400,7 +406,10 @@ function openCsvPreview(preview: ImportPreview, ctx: DataScreenContext): void {
         onClick: async () => {
           try {
             const r = await app.csvService.executeImport(preview, strategy);
-            toast(`Tạo ${r.created} · Thay ${r.replaced} · Bỏ ${r.skipped} · OFF ${r.offDays}`);
+            // CSV import goes through the services, which already enqueue sync
+            // changes; push them to the cloud in the background.
+            void app.syncService.sync().catch(() => {});
+            toast(`Tạo ${r.created} · Thay ${r.replaced} · Bỏ ${r.skipped} · OFF ${r.offDays} · đang đồng bộ`);
             close();
             ctx.refresh();
           } catch (err) {
