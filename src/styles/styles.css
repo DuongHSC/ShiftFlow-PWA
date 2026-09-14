@@ -1,0 +1,1354 @@
+/* ShiftFlow PWA — Styles
+ * styles/styles.css
+ *
+ * Mobile-first, iOS-like polish. Light mode first. CSS variables are namespaced
+ * so a future dark theme can be added by overriding :root under a data-theme
+ * attribute without rewriting components.
+ */
+
+:root {
+  /* Palette */
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #f3f5f9;
+  --text: #1c1c1e;
+  --text-2: #6b7280;
+  --text-3: #9aa0a6;
+  --border: #e7eaf0;
+  --primary: #2f6feb;
+  --primary-contrast: #ffffff;
+  --danger: #e5484d;
+  --success: #2f9e44;
+  --warning: #e8a90a;
+
+  /* Shift accents (distinguishable + accessible; paired with text codes). */
+  --shift-c1: #3b82f6;
+  --shift-c2: #14b8a6;
+  --shift-c3: #8b5cf6;
+  --shift-c4: #f97316;
+  --shift-c5: #e5484d;
+  --shift-off: #9aa0a6;
+
+  /* Shape & spacing */
+  --radius: 18px;
+  --radius-sm: 10px;
+  --radius-lg: 22px;
+  --space: 16px;
+  --space-sm: 8px;
+  --space-lg: 24px;
+  --shadow: 0 1px 2px rgba(21, 31, 56, 0.04), 0 12px 30px rgba(21, 31, 56, 0.07);
+  --nav-height: 64px;
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+:root[data-theme="dark"] {
+  --bg: #111318;
+  --surface: #1b1f27;
+  --surface-2: #252b35;
+  --text: #f4f6f8;
+  --text-2: #b8c0cc;
+  --text-3: #7f8998;
+  --border: #303744;
+  --primary: #6ea8ff;
+  --primary-contrast: #07111f;
+  --danger: #ff6b70;
+  --success: #51cf66;
+  --warning: #ffd43b;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --bg: #111318;
+    --surface: #1b1f27;
+    --surface-2: #252b35;
+    --text: #f4f6f8;
+    --text-2: #b8c0cc;
+    --text-3: #7f8998;
+    --border: #303744;
+    --primary: #6ea8ff;
+    --primary-contrast: #07111f;
+    --danger: #ff6b70;
+    --success: #51cf66;
+    --warning: #ffd43b;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.3);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  width: 100%;
+  max-width: 100%;
+  /* Safety guard: the real overflow cause (calendar grid) is fixed above with
+     minmax(0,1fr) + min-width:0; this only prevents any stray 1px rounding from
+     producing a horizontal scrollbar. */
+  overflow-x: hidden;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
+#app {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* ---- Layout ---- */
+.screen {
+  padding: var(--space);
+  padding-top: max(var(--space), env(safe-area-inset-top));
+  padding-bottom: calc(var(--nav-height) + var(--space-lg));
+  animation: fade 0.18s ease;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.app-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.02em;
+}
+
+.screen-title {
+  font-size: 30px;
+  font-weight: 800;
+  margin: 2px 0 2px;
+}
+
+.screen-subtitle {
+  color: var(--text-2);
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.section-label {
+  /* Calmer than before: no uppercase, lighter weight, quieter color so labels
+     never shout louder than the actual schedule content. */
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-2);
+  margin: var(--space-lg) 4px var(--space-sm);
+}
+
+/* ---- Card ---- */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space);
+  margin-bottom: var(--space);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.card.tight {
+  padding: 12px var(--space);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.muted {
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.tiny {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+/* ---- Shift badge ---- */
+.shift-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 16px;
+  color: #fff;
+  background: var(--shift-off);
+}
+.shift-badge.sm {
+  min-width: 34px;
+  height: 26px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.shift-badge.md {
+  min-width: 48px;
+  height: 48px;
+  font-size: 17px;
+  border-radius: 13px;
+}
+.shift-badge.lg {
+  min-width: 60px;
+  height: 60px;
+  font-size: 22px;
+  border-radius: 16px;
+}
+.shift-c1 {
+  background: var(--shift-c1);
+}
+.shift-c2 {
+  background: var(--shift-c2);
+}
+.shift-c3 {
+  background: var(--shift-c3);
+}
+.shift-c4 {
+  background: var(--shift-c4);
+}
+.shift-c5 {
+  background: var(--shift-c5);
+}
+.shift-off {
+  background: var(--shift-off);
+}
+
+/* ---- Today big shift card ---- */
+.today-shift {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+}
+.today-shift .big-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  font-size: 24px;
+  min-width: 64px;
+}
+.time-grid {
+  display: flex;
+  gap: var(--space-lg);
+  margin-top: 12px;
+}
+.time-grid .time {
+  font-size: 20px;
+  font-weight: 700;
+}
+.time-grid .time-label {
+  font-size: 12px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ---- Chips / tasks ---- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface-2);
+}
+.chip.selected {
+  background: var(--primary);
+  color: var(--primary-contrast);
+  border-color: var(--primary);
+}
+
+/* ---- Buttons ---- */
+button {
+  font-family: inherit;
+}
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.05s ease, opacity 0.15s ease;
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn.primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+.btn.danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn.block {
+  width: 100%;
+}
+.btn.ghost {
+  background: transparent;
+}
+.btn-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap; /* stack on very narrow widths instead of overflowing */
+}
+/* Buttons in a row must be able to shrink (flex min-width defaults to content)
+   so two side-by-side "block" buttons never overflow the card. */
+.btn-row > .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Very narrow screens: stack action buttons full-width. */
+@media (max-width: 360px) {
+  .btn-row > .btn {
+    flex-basis: 100%;
+  }
+}
+
+/* ---- Inputs ---- */
+input[type="text"],
+input[type="number"],
+input[type="time"],
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+}
+textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+label.field {
+  display: block;
+  margin-bottom: 12px;
+}
+label.field > span {
+  display: block;
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* ---- Bottom navigation ---- */
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 560px;
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 50;
+}
+.nav-item {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+}
+.nav-item .icon {
+  font-size: 20px;
+  line-height: 1;
+}
+.nav-item.active {
+  color: var(--primary);
+}
+
+/* ---- Calendar ---- */
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.cal-nav {
+  display: flex;
+  gap: 8px;
+}
+.cal-grid {
+  display: grid;
+  /* minmax(0, 1fr) lets the 7 columns genuinely shrink to fit any width;
+     without the 0 min, a cell's content min-size can overflow the viewport. */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.cal-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  padding-bottom: 4px;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.cal-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  padding: 2px;
+  min-width: 0; /* allow the cell to shrink below its content's intrinsic width */
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.cal-cell.empty {
+  background: transparent;
+  cursor: default;
+}
+.cal-cell .daynum {
+  font-size: 13px;
+  font-weight: 600;
+}
+/* today/selected states are defined below (distinct + combinable) */
+.cal-cell .cell-code {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-cell .cell-code.empty-code {
+  min-height: 11px;
+}
+.cal-cell .indicators {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+}
+/* TODAY and SELECTED are DISTINCT and can combine:
+   TODAY  -> filled dot under the day number (ring on the number)
+   SELECTED -> solid outline box around the cell */
+.cal-cell.today .daynum {
+  background: var(--primary);
+  color: #fff;
+  border-radius: 999px;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cal-cell.selected {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface-2));
+}
+.cal-legend {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  align-items: center;
+  margin: 8px 0 4px;
+}
+.cal-legend .dot {
+  display: inline-block;
+  margin-right: 4px;
+}
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.dot.task {
+  background: var(--warning);
+}
+.dot.note {
+  background: var(--primary);
+}
+
+/* ---- 3 days ---- */
+.day-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.day-card .date-col {
+  min-width: 54px;
+  text-align: center;
+}
+.day-card .date-col .dow {
+  font-size: 12px;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.day-card .date-col .dnum {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+/* ---- Sheet / modal ----
+ * Mobile-first: bottom sheet anchored to the bottom, full width.
+ * Desktop (>=768px): centered modal (both axes), fixed max-width, scroll inside.
+ */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  animation: fade 0.15s ease;
+}
+.sheet {
+  background: var(--surface);
+  width: 100%;
+  max-width: 560px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space);
+  padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom));
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: slideup 0.22s ease;
+}
+@keyframes slideup {
+  from {
+    transform: translateY(24px);
+    opacity: 0.6;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Desktop / wide viewports: centered modal, not a bottom sheet. */
+@media (min-width: 768px) {
+  .sheet-backdrop {
+    align-items: center; /* vertical centering */
+    justify-content: center; /* horizontal centering */
+    padding: 24px;
+  }
+  .sheet {
+    width: 100%;
+    max-width: 640px; /* within the 560–680px range */
+    max-height: calc(100vh - 48px);
+    border-radius: var(--radius-lg);
+    padding-bottom: var(--space-lg);
+    animation: fade 0.18s ease; /* no slide-up on desktop */
+  }
+  /* The drag handle is a mobile bottom-sheet affordance; hide on desktop. */
+  .sheet .sheet-handle {
+    display: none;
+  }
+}
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  margin: 2px auto 12px;
+}
+
+/* ---- List rows (settings) ---- */
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px var(--space);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.list-row:last-child {
+  border-bottom: none;
+}
+.list-row .chev {
+  color: var(--text-3);
+}
+.checkmark {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.checkmark.empty {
+  background: transparent;
+}
+.list-group {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: var(--space);
+}
+
+/* ---- Toast ---- */
+.toast {
+  position: fixed;
+  bottom: calc(var(--nav-height) + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  /* Fixed high-contrast colors (NOT var(--text)): in dark mode --text is
+     near-white, which made a white-on-white unreadable toast. */
+  background: #1f2430;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  max-width: min(90vw, 420px);
+  z-index: 400;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+  animation: fade 0.15s ease;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-3);
+  padding: var(--space-lg);
+  font-size: 14px;
+}
+
+/* ---- Upcoming countdown / live status ---- */
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.dot-live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 0 rgba(47, 111, 235, 0.5);
+  animation: pulse 1.8s infinite;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 111, 235, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(47, 111, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(47, 111, 235, 0);
+  }
+}
+
+/* ---- Settings list icons ---- */
+.list-icon {
+  font-size: 20px;
+  line-height: 1;
+  width: 28px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+/* ---- Redesign v4 additions ---- */
+
+/* Section overline (HÔM NAY / NGÀY MAI) */
+.overline {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  padding: 0 2px;
+}
+.overline-date {
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+/* Tappable card affordance */
+.card.tap {
+  cursor: pointer;
+  transition: transform 0.05s ease;
+}
+.card.tap:active {
+  transform: scale(0.995);
+}
+
+.note-line {
+  color: var(--text-2);
+}
+
+/* Top bar for secondary screens */
+.topbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  min-height: 32px;
+}
+.btn.back {
+  padding-left: 0;
+}
+
+/* Shift badge now takes an inline background color; keep shape/typography here.
+   The CODE text is always shown, so color is never the only differentiator. */
+.shift-badge {
+  color: #fff;
+}
+
+/* Shift color chip dot (day detail selector) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+/* Settings swatch (shift list) + color picker */
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+.swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.swatch-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.swatch-btn.selected {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
+}
+
+/* "Sắp có" badge + disabled list rows */
+.badge-soon {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.list-row.disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Data management per-action line */
+.data-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.task-settings-row {
+  gap: 10px;
+}
+.task-settings-row > .stack {
+  min-width: 0;
+}
+.task-settings-actions {
+  flex: 0 0 auto;
+}
+.danger-card {
+  border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--border));
+  background: color-mix(in srgb, var(--danger) 4%, var(--surface));
+}
+
+/* Smaller buttons */
+.btn.small {
+  padding: 8px 14px;
+  font-size: 14px;
+}
+.btn.icon-btn {
+  min-width: 40px;
+  padding: 8px 12px;
+}
+
+/* 3-day date column tweak (number first, weekday below) */
+.day-card .date-col .dnum {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+.day-card .date-col .dow {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ---- Data v2 additions: task visibility, cell tasks ---- */
+
+/* Read-only task chip (Overview) */
+.chip.readonly {
+  cursor: default;
+  background: var(--surface-2);
+}
+
+/* Day Detail assigned-task rows with eye toggle */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.task-row.hidden-task {
+  opacity: 0.55;
+  background: var(--surface-2);
+}
+.eye-btn {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex: 0 0 auto;
+}
+.eye-btn.off {
+  filter: grayscale(1);
+}
+.task-time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+label.field.compact {
+  margin-bottom: 0;
+}
+label.field.compact > span {
+  font-size: 12px;
+}
+label.field.compact input {
+  padding: 9px;
+}
+.task-reminder-row {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+.task-reminder-toggle {
+  justify-content: flex-start;
+  gap: 8px;
+}
+.task-reminder-row select {
+  padding: 9px;
+}
+.inline-task-form {
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+@media (max-width: 400px) {
+  .task-time-grid,
+  .task-reminder-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Compact tasks inside a calendar cell */
+.cell-tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  justify-content: center;
+  max-width: 100%;
+  min-height: 12px;
+}
+.cell-task {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 3px;
+  line-height: 13px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-task.more {
+  color: var(--text-3);
+  border-style: dashed;
+}
+
+/* ---- Refactor v4: calendar OFF code, day-detail view/edit ---- */
+
+/* OFF shown as muted text in a calendar cell (no color dot). */
+.cal-cell .cell-code.off-code {
+  color: var(--text-3);
+  font-weight: 700;
+}
+
+/* Pencil / eye header action in Day Detail */
+.icon-action {
+  border: none;
+  background: var(--surface-2);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.icon-action:active {
+  transform: scale(0.96);
+}
+
+/* ---- Final v6: calmer Overview headings + Day Detail header ---- */
+
+/* Quiet day heading in Overview (replaces the loud uppercase overline). */
+.day-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0 2px;
+  flex-wrap: wrap;
+}
+.day-heading-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.day-heading-date {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+/* Overview note line: smaller, muted, only present when a note exists. */
+.note-line {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+/* Day Detail header (✕ · title · ✏️/✓) */
+.sheet-heading {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+.sheet-date {
+  margin-top: 10px;
+  font-size: 15px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.icon-action.ghost {
+  background: transparent;
+  color: var(--text-2);
+}
+.icon-action.primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Overview read-only task chips: compact + subtle. */
+.chip.readonly {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-2);
+  border-color: transparent;
+  cursor: default;
+}
+
+/* ---- Fix v9: Overview WorkDay card fixed badge column ---- */
+
+/* Grid card: fixed badge column + flexible content. The content column always
+   starts at the same X regardless of the shift code text/length. */
+.wd-card {
+  display: grid;
+  grid-template-columns: var(--wd-badge-size, 64px) 1fr;
+  column-gap: 14px;
+  align-items: start;
+}
+.wd-card-lg {
+  --wd-badge-size: 72px;
+}
+.wd-card-md {
+  --wd-badge-size: 56px;
+}
+.wd-badge-col {
+  width: var(--wd-badge-size, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wd-content {
+  min-width: 0; /* allow chips/notes to wrap instead of stretching the grid */
+}
+.today-content {
+  min-width: 0;
+}
+.shift-title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+.wd-content > .shift-title,
+.today-content > .shift-title,
+.calendar-detail-content > .shift-title {
+  margin-bottom: -5px;
+}
+
+/* Clear visual hierarchy inside a WorkDay card:
+   Task = reusable day tag, Công việc = timed item, Ghi chú = free text. */
+.wd-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.wd-info-section {
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: var(--surface-2);
+}
+.wd-task-info {
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+.wd-event-info {
+  background: color-mix(in srgb, var(--warning) 8%, var(--surface));
+}
+.wd-note-info {
+  background: color-mix(in srgb, var(--text-3) 8%, var(--surface));
+}
+.wd-info-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wd-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+.wd-event-info .wd-info-icon {
+  color: #b87500;
+}
+.wd-note-info .wd-info-icon {
+  color: var(--text-2);
+}
+.wd-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.wd-event-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+.wd-event-title {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wd-event-time {
+  flex: 0 0 auto;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+.wd-empty-info {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.wd-info-section .chips {
+  gap: 6px;
+}
+.wd-info-section .chip.readonly {
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+  color: var(--text);
+}
+.wd-note-info .note-line {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@media (max-width: 400px) {
+  .wd-card {
+    grid-template-columns: 52px minmax(0, 1fr);
+    column-gap: 11px;
+  }
+  .wd-card-lg {
+    --wd-badge-size: 58px;
+  }
+  .wd-card-md {
+    --wd-badge-size: 50px;
+  }
+  .wd-badge-col .shift-badge {
+    border-radius: 15px;
+  }
+  .wd-event-line {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1px;
+  }
+}
+
+/* Inside the Overview cards, the badge fills the fixed square column so its
+   width never depends on the code text (C1..C7, "Ca đêm", ...). */
+.wd-badge-col .shift-badge {
+  width: var(--wd-badge-size, 64px);
+  min-width: var(--wd-badge-size, 64px);
+  height: var(--wd-badge-size, 64px);
+  border-radius: 18px;
+  padding: 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wd-card-md .wd-badge-col .shift-badge {
+  border-radius: 14px;
+  font-size: 16px;
+}
+
+/* ---- Responsive fix v10: calendar fits narrow viewports ---- */
+
+/* On narrow phones tighten the grid gap and cell paddings slightly so all 7
+   columns fit comfortably without clipping. Cells stay square and readable. */
+@media (max-width: 400px) {
+  .cal-grid {
+    gap: 4px;
+  }
+  .cal-cell {
+    padding: 1px;
+    border-radius: 10px;
+  }
+  .cal-cell .daynum {
+    font-size: 12px;
+  }
+  .cal-cell .cell-code {
+    font-size: 10px;
+  }
+  .cal-cell .cell-task {
+    font-size: 8px;
+    padding: 0 2px;
+  }
+  /* Keep the today ring proportional so it never widens the cell. */
+  .cal-cell.today .daynum {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* The Calendar card itself must never exceed the screen. */
+.screen > .card {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---- Edit v13: single Save + delete confirmation ---- */
+
+/* Spacer that occupies the header's right slot in EDIT mode (no ✓ button),
+   keeping the centered title aligned like the VIEW header. */
+.icon-action-spacer {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+}
+
+/* Delete confirmation dialog (centered, above the Day Detail sheet). */
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 200; /* above the sheet (100) */
+  animation: fade 0.15s ease;
+}
+.confirm-dialog {
+  background: var(--surface);
+  width: 100%;
+  max-width: 340px;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  box-sizing: border-box;
+  animation: fade 0.18s ease;
+}
+.confirm-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.confirm-message {
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+/* ---- Cloud sync indicator (minimal, unobtrusive) ---- */
+.sync-indicator {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  right: 10px;
+  z-index: 300;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2, #f0f2f5);
+  color: var(--text-2, #6b7280);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.sync-indicator.visible {
+  opacity: 1;
+  transform: none;
+}
+.sync-indicator.state-synced {
+  color: #2f9e44;
+}
+.sync-indicator.state-offline {
+  color: #9aa0a6;
+}
+.sync-indicator.state-conflict {
+  color: #e5484d;
+}

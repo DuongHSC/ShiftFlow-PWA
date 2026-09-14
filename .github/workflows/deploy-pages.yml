@@ -1,0 +1,70 @@
+# ShiftFlow PWA — Build & deploy to GitHub Pages.
+#
+# The PWA is served from a GitHub "project page" at:
+#   https://<user>.github.io/<repo>/
+# so Vite must build with base = "/<repo>/". This workflow derives that
+# automatically from the repository name, so you don't have to edit anything.
+#
+# One-time setup after pushing:
+#   Repo → Settings → Pages → "Build and deployment" → Source: GitHub Actions.
+
+name: Deploy PWA to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      # base path = "/<repo-name>/" (project pages). If you use a custom domain
+      # or a <user>.github.io repo, set repo variable SHIFTFLOW_BASE to "/".
+      - name: Compute base path
+        id: base
+        run: |
+          if [ -n "${{ vars.SHIFTFLOW_BASE }}" ]; then
+            echo "base=${{ vars.SHIFTFLOW_BASE }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=/${GITHUB_REPOSITORY#*/}/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        run: npm run build
+        env:
+          SHIFTFLOW_BASE: ${{ steps.base.outputs.base }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
