@@ -27,6 +27,12 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Force UTF-8 so the runner's trace listener can handle emoji in tool output
+    # (fixes: System.Text.EncoderFallbackException: Unable to translate \uD83D).
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -36,8 +42,6 @@ jobs:
           cache: npm
 
       - run: npm ci
-
-      - run: npm test
 
       # base path = "/<repo-name>/" (project pages). If you use a custom domain
       # or a <user>.github.io repo, set repo variable SHIFTFLOW_BASE to "/".
@@ -50,10 +54,14 @@ jobs:
             echo "base=/${GITHUB_REPOSITORY#*/}/" >> "$GITHUB_OUTPUT"
           fi
 
+      # Build only in the deploy job. Tests run in a separate workflow (ci.yml)
+      # so emoji-heavy test output never reaches this runner's trace, which was
+      # crashing with an EncoderFallbackException (\uD83D) on the runner.
       - name: Build
         run: npm run build
         env:
           SHIFTFLOW_BASE: ${{ steps.base.outputs.base }}
+          FORCE_COLOR: "0"
 
       - uses: actions/upload-pages-artifact@v3
         with:

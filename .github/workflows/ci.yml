@@ -1,0 +1,29 @@
+# ShiftFlow PWA — CI (tests). Kept separate from the Pages deploy so test
+# output (which can include emoji) never interferes with the deploy runner.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      FORCE_COLOR: "0"
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          SHIFTFLOW_BASE: /ShiftFlow-PWA/
