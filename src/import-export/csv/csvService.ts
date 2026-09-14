@@ -176,8 +176,14 @@ export class CsvService {
       .map((c) => c.trim())
       .filter((c) => c.length > 0);
     for (const code of codes) {
-      const def = await this.tasks.taskByCode(code);
-      if (def) await this.tasks.addTask(def.id, workDayID);
+      // Plan A: auto-create the task definition if it doesn't exist yet, so a
+      // CSV can reference tasks the user hasn't declared. createTask is
+      // rejected on duplicate, so we look up first and create only when absent.
+      let def = await this.tasks.taskByCode(code);
+      if (!def) {
+        def = await this.tasks.createTask(code, code);
+      }
+      await this.tasks.addTask(def.id, workDayID);
     }
   }
 

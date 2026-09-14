@@ -195,6 +195,42 @@ describe("CSV compatibility", () => {
     expect(parseCsv("Date\tShift\n01/08/2026\tC1\n")[0].shiftString).toBe("C1");
     expect(parseCsv("Date;Shift\n01/08/2026;C2\n")[0].shiftString).toBe("C2");
   });
+
+  it("an unknown task no longer errors the row (Plan A: lenient validation)", () => {
+    // 'Ticket' is not a seeded task, but the row must still be VALID.
+    const rows = parseCsv("Date,Shift,Task\n02/09/2026,C5,Ticket\n");
+    const validated = validateCsv(rows, {
+      existingWorkDayDates: new Set(),
+      knownTaskCodes: new Set(["MW"]), // Ticket is NOT known
+    });
+    expect(validated[0].status.kind).toBe("valid");
+    expect(validated[0].shiftCode).toBe("C5");
+  });
+
+  it("import auto-creates a missing task and assigns it (no OFF, no lost task)", async () => {
+    const db = new ShiftFlowDB(`${name}-autotask`);
+    await seedIfNeeded(db);
+    const s = build(db);
+
+    // 'Ticket' does not exist yet in this DB.
+    expect(await s.tasks.taskByCode("Ticket")).toBeUndefined();
+
+    const csv = "Date,Shift,Task,Note\n02/09/2026,C5,Ticket,\n";
+    const preview = await s.csvService.prepareImport(csv);
+    const result = await s.csvService.executeImport(preview, "skipExisting");
+
+    // The day was created (NOT OFF).
+    expect(result.created).toBe(1);
+    const wd = await s.workDays.byDate(new Date(2026, 8, 2));
+    expect(wd).toBeDefined();
+    expect(wd!.shiftCode).toBe("C5");
+
+    // The task was auto-created and assigned.
+    const ticket = await s.tasks.taskByCode("Ticket");
+    expect(ticket).toBeDefined();
+    const assigned = await s.tasks.tasksForWorkDay(wd!.id);
+    expect(assigned.map((t) => t.code)).toContain("Ticket");
+  });
 });
 
 describe("IndexedDB persistence", () => {

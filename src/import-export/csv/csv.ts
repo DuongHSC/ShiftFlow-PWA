@@ -180,19 +180,11 @@ export function validateCsv(
       }
     }
 
-    // Task (only when known codes are supplied).
-    if (!error && knownUpper.size > 0 && row.taskString) {
-      const codes = row.taskString
-        .split(";")
-        .map((c) => c.trim())
-        .filter((c) => c.length > 0);
-      for (const c of codes) {
-        if (!knownUpper.has(c.toUpperCase())) {
-          error = `Task không hợp lệ: ${c}`;
-          break;
-        }
-      }
-    }
+    // Task validation is intentionally lenient: an unknown task code is NOT an
+    // error. The import auto-creates any missing TaskDefinition (Plan A), so a
+    // row is never dropped (and the day never becomes OFF) just because a task
+    // name hasn't been declared yet. `knownUpper` is kept only for reference.
+    void knownUpper;
 
     return {
       row,
